@@ -1,0 +1,12 @@
+# ignore python byte-code (cache)
+**/__pycache__/
+# ignore .idea
+.idea
+# ignore log files
+*.log
+# ignore main folder
+bboom_tz/main
+# ignore environment files
+**.env
+# ignore sqlite db file
+**.sqlite3
