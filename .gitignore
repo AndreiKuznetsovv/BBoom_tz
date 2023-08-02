@@ -5,7 +5,7 @@
 # ignore log files
 *.log
 # ignore main folder
-bboom_tz/main
+#bboom_tz/main
 # ignore environment files
 **.env
 # ignore sqlite db file

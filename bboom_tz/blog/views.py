@@ -2,56 +2,32 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import User, Post
-from .serializers import UserSerializer, PostSerializer
+from .services import create_post, get_users_list, get_user_posts, update_post, delete_post
 
 
 class UserAPIView(APIView):
     def get(self, request: Request) -> Response:
-        users_list = User.objects.all()
-        serializer = UserSerializer(users_list, many=True)
-        return Response(status=200, data={"users": serializer.data})
+        status, data = get_users_list()  # unpacking tuple[int, dict]
+        return Response(status=status, data={"users": data})
 
 
 class UserPostsAPIView(APIView):
 
     def get(self, request: Request, user_id: int) -> Response:
-        user_posts = Post.objects.filter(author_id=user_id).all()
-        serializer = PostSerializer(user_posts, many=True)
-        return Response(status=200, data={"user posts": serializer.data})
+        status, data = get_user_posts(author_id=user_id)  # unpacking tuple[int, dict]
+        return Response(status=status, data={"user posts": data})
 
 
 class PostAPIView(APIView):
-    def get(self, request: Request) -> Response:
-        posts = Post.objects.all()
-        serializer = PostSerializer(posts, many=True)
-        return Response(status=200, data={"posts": serializer.data})
-
     def post(self, request: Request) -> Response:
-        serializer = PostSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-
-        return Response(status=201, data={"post info": serializer.data})
+        status, data = create_post(data=request.data)
+        return Response(status=status, data={"created post": data})
 
     def put(self, request: Request, post_id: int) -> Response:
-        try:
-            instance = Post.objects.get(id=post_id)
-        except Post.DoesNotExist as e:
-            return Response(status=404, data={"error": "Object does not exists"})
-
-        serializer = PostSerializer(data=request.data, instance=instance)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-
-        return Response(status=200, data={"updated post": serializer.data})
+        status, data = update_post(data=request.data, post_id=post_id)
+        return Response(status=status, data={"updated post": data})
 
     def delete(self, request: Request, post_id: int) -> Response:
-        try:
-            instance = Post.objects.get(id=post_id)
-        except Post.DoesNotExist as e:
-            return Response(status=404, data={"error": "Object does not exists"})
+        status, data = delete_post(post_id=post_id)
 
-        instance.delete()
-
-        return Response(status=204)
+        return Response(status=204, data=data)
