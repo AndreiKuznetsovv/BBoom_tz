@@ -10,3 +10,5 @@
 **.env
 # ignore sqlite db file
 **.sqlite3
+#ignore test folder
+bboom_tz/blog/tst

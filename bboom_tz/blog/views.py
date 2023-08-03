@@ -1,33 +1,62 @@
-from rest_framework.request import Request
-from rest_framework.response import Response
-from rest_framework.views import APIView
+from rest_framework.generics import ListAPIView, RetrieveUpdateDestroyAPIView, CreateAPIView
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 
-from .services import create_post, get_users_list, get_user_posts, update_post, delete_post
-
-
-class UserAPIView(APIView):
-    def get(self, request: Request) -> Response:
-        status, data = get_users_list()  # unpacking tuple[int, dict]
-        return Response(status=status, data={"users": data})
+from .models import User, Post
+from .permissions import IsOwnerOrReadOnly
+from .serializers import PostSerializer, UserSerializer
 
 
-class UserPostsAPIView(APIView):
+class UserListAPIView(ListAPIView):
+    '''
+    ALLOWED methods: GET
+    Return a list of ALL users
+    Method Get - only for ADMIN users
+    '''
+    permission_classes = [IsAdminUser]
 
-    def get(self, request: Request, user_id: int) -> Response:
-        status, data = get_user_posts(author_id=user_id)  # unpacking tuple[int, dict]
-        return Response(status=status, data={"user posts": data})
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
 
 
-class PostAPIView(APIView):
-    def post(self, request: Request) -> Response:
-        status, data = create_post(data=request.data)
-        return Response(status=status, data={"created post": data})
+class PostListAPIView(ListAPIView):
+    '''
+    ALLOWED methods: GET
+    Return a list of all posts of requested (by id)
+    Method Post - only for AUTHENTICATED users
+    '''
+    permission_classes = [IsAuthenticated]
 
-    def put(self, request: Request, post_id: int) -> Response:
-        status, data = update_post(data=request.data, post_id=post_id)
-        return Response(status=status, data={"updated post": data})
+    # queryset = User.objects.all()
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
 
-    def delete(self, request: Request, post_id: int) -> Response:
-        status, data = delete_post(post_id=post_id)
+    def get_queryset(self):
+        user = self.kwargs['user']
+        queryset = Post.objects.filter(user_id=user)
+        # queryset = User.objects.filter(id=user).prefetch_related('post_set')
+        return queryset
 
-        return Response(status=204, data=data)
+
+class PostRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
+    """
+    ALLOWED METHODS: GET, PUT, PATH, DELETE
+    Concrete view for retrieving, updating or deleting a model instance.
+    Unsafe methods DELETE, PUT, PATCH only for OWNER of the post
+    Safe method GET - for all users
+    """
+    permission_classes = [IsOwnerOrReadOnly]
+
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+
+
+class PostCreateAPIView(CreateAPIView):
+    """
+    ALLOWED methods: POST
+    Concrete view for creating a model instance.
+    Method Post only for AUTHENTICATED users
+    """
+    permission_classes = [IsAuthenticated]
+
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
