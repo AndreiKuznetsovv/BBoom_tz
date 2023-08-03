@@ -1,5 +1,6 @@
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.generics import ListAPIView, RetrieveUpdateDestroyAPIView, CreateAPIView
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
 
 from .models import User, Post
 from .permissions import IsOwnerOrReadOnly
@@ -18,13 +19,27 @@ class UserListAPIView(ListAPIView):
     serializer_class = UserSerializer
 
 
-class PostListAPIView(ListAPIView):
+class UserCreateAPIView(CreateAPIView):
+    """
+    ALLOWED methods: POST
+    Concrete view for creating a model instance.
+    Method Post only for AUTHENTICATED users
+    """
+    permission_classes = [AllowAny]
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+
+class UserPostsListAPIView(ListAPIView):
     '''
     ALLOWED methods: GET
     Return a list of all posts of requested (by id)
     Method Post - only for AUTHENTICATED users
     '''
     permission_classes = [IsAuthenticated]
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
 
     # queryset = User.objects.all()
     queryset = Post.objects.all()
@@ -45,6 +60,7 @@ class PostRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
     Safe method GET - for all users
     """
     permission_classes = [IsOwnerOrReadOnly]
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
 
     queryset = Post.objects.all()
     serializer_class = PostSerializer
@@ -57,6 +73,7 @@ class PostCreateAPIView(CreateAPIView):
     Method Post only for AUTHENTICATED users
     """
     permission_classes = [IsAuthenticated]
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
 
     queryset = Post.objects.all()
     serializer_class = PostSerializer

@@ -17,13 +17,15 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
-from blog.views import PostListAPIView, UserListAPIView, PostRetrieveUpdateDestroyAPIView, PostCreateAPIView
+from blog.views import UserPostsListAPIView, UserListAPIView, PostRetrieveUpdateDestroyAPIView, PostCreateAPIView, \
+    UserCreateAPIView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("api/v1.0/auth/", include('rest_framework.urls')),
-    path('api/v1.0/users/', UserListAPIView.as_view()),
-    path('api/v1.0/posts/', PostCreateAPIView.as_view()),
-    path('api/v1.0/posts/<int:pk>', PostRetrieveUpdateDestroyAPIView.as_view()),
-    path('api/v1.0/users/<int:user>', PostListAPIView.as_view())
+    path("api/v1.0/auth/register", UserCreateAPIView.as_view(), name="register"),
+    path('api/v1.0/users/', UserListAPIView.as_view(), name="users"),
+    path('api/v1.0/posts/', PostCreateAPIView.as_view(), name="create_post"),
+    path('api/v1.0/posts/<int:pk>', PostRetrieveUpdateDestroyAPIView.as_view(), name="posts"),
+    path('api/v1.0/users/<int:user>', UserPostsListAPIView.as_view(), name="user_posts")
 ]
